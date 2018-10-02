@@ -27,11 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -81,7 +81,7 @@ import java.util.List;
  */
 
 @TeleOp(name="Concept: Vuforia Navigation", group ="Concept")
-@Disabled
+//@Disabled
 public class ConceptVuforiaNavigation extends LinearOpMode {
 
     public static final String TAG = "Vuforia Navigation Sample";
@@ -117,7 +117,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * Once you've obtained a license key, copy the string from the Vuforia web site
          * and paste it in to your code on the next line, between the double quotes.
          */
-        parameters.vuforiaLicenseKey = " -- YOUR NEW VUFORIA KEY GOES HERE  --- ";
+        parameters.vuforiaLicenseKey = "AfBc/KD/////AAABmb/EnrCtR0Kki+8T7+jaeUmAW27MYMyjZ9lmEhuxE8khf72QHRx51H+rTcQSHJMM4D6Jk45XcGhRbggDzc2vVz1cFjH6OGkdgfOURG60CkBQHRZsdbpXboaH7nsw7gulmcdKY4rbXGKocw2x4xy9CShgUlNOT4Xozy5l9h2B4sTNVx1/Jvg97zcXh3h34JD7jz61+EGXc4ZajXuKNxCWu4YNEZKwhfkCDSPuezancs5UJXUbFMNOP5tuIgsbR+cZI6xzspTDPfGm99Igj+l2R/5KwJT3Jyk3ukJSoCnvWs+U27Zs8jAcA+gsHnZaHCuGFw29lrSUBMatbm1UN8Z35jN8ilV8aIihuClZ1RgU3IWZ";
 
         /*
          * We also indicate which camera on the RC that we wish to use.
@@ -139,12 +139,18 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables stonesAndChips = this.vuforia.loadTrackablesFromAsset("StonesAndChips");
-        VuforiaTrackable redTarget = stonesAndChips.get(0);
-        redTarget.setName("RedTarget");  // Stones
+        VuforiaTrackables stonesAndChips = this.vuforia.loadTrackablesFromAsset("RoverRuckus");
+        VuforiaTrackable redPerimeter = stonesAndChips.get(1);
+        redPerimeter.setName("RedPerimeter");  // Red Image
 
-        VuforiaTrackable blueTarget  = stonesAndChips.get(1);
-        blueTarget.setName("BlueTarget");  // Chips
+        VuforiaTrackable bluePerimeter  = stonesAndChips.get(0);
+        bluePerimeter.setName("BluePerimeter");  // Blue Image
+
+        VuforiaTrackable frontPerimeter  = stonesAndChips.get(2);
+        frontPerimeter.setName("frontPerimeter");  // Chips
+
+        VuforiaTrackable backPerimeter  = stonesAndChips.get(3);
+        backPerimeter.setName("BackPerimeter");  // Chips
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
@@ -225,7 +231,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 90, 0));
-        redTarget.setLocation(redTargetLocationOnField);
+        redPerimeter.setLocation(redTargetLocationOnField);
         RobotLog.ii(TAG, "Red Target=%s", format(redTargetLocationOnField));
 
        /*
@@ -241,8 +247,32 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 0, 0));
-        blueTarget.setLocation(blueTargetLocationOnField);
+        bluePerimeter.setLocation(blueTargetLocationOnField);
         RobotLog.ii(TAG, "Blue Target=%s", format(blueTargetLocationOnField));
+
+        OpenGLMatrix frontTargetLocationOnField = OpenGLMatrix
+                /* Then we translate the target off to the Blue Audience wall.
+                Our translation here is a positive translation in Y.*/
+                .translation(0, mmFTCFieldWidth/2, 0)
+                .multiplied(Orientation.getRotationMatrix(
+                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
+                        AxesReference.EXTRINSIC, AxesOrder.XZX,
+                        AngleUnit.DEGREES, 90, 0, 0));
+        frontPerimeter.setLocation(frontTargetLocationOnField);
+        RobotLog.ii(TAG, "Blue Target=%s", format(frontTargetLocationOnField));
+
+        OpenGLMatrix backTargetLocationOnField = OpenGLMatrix
+                /* Then we translate the target off to the Blue Audience wall.
+                Our translation here is a positive translation in Y.*/
+                .translation(0, mmFTCFieldWidth/2, 0)
+                .multiplied(Orientation.getRotationMatrix(
+                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
+                        AxesReference.EXTRINSIC, AxesOrder.XZX,
+                        AngleUnit.DEGREES, 90, 0, 0));
+        backPerimeter.setLocation(backTargetLocationOnField);
+        RobotLog.ii(TAG, "Blue Target=%s", format(backTargetLocationOnField));
+
+
 
         /**
          * Create a transformation matrix describing where the phone is on the robot. Here, we
@@ -268,8 +298,10 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
          */
-        ((VuforiaTrackableDefaultListener)redTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)blueTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)redPerimeter.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)bluePerimeter.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)frontPerimeter.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)backPerimeter.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
 
         /**
          * A brief tutorial: here's how all the math is going to work:
