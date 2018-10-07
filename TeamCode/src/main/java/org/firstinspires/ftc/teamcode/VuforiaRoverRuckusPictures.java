@@ -83,7 +83,7 @@ import java.util.List;
 
 @Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
 //@Disabled
-public class VuforiaRoverRuckus extends LinearOpMode {
+public class VuforiaRoverRuckusPictures extends LinearOpMode {
 
     public static final String TAG = "Vuforia Navigation Sample";
 
