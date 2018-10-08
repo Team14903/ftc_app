@@ -19,6 +19,9 @@ public class BasicTeleOpProgram extends LinearOpMode {
     //Value positions for servos
     private static final double armRetractedPosition = 0.0;
     private static final double armExtendedPosition = 0.2;
+    private static double driveMotorPower;
+    private static double turningPower;
+
     @Override
     public void runOpMode() throws InterruptedException{
         //Configure motors to Expansion Hub
@@ -39,8 +42,13 @@ public class BasicTeleOpProgram extends LinearOpMode {
 
         while(opModeIsActive()){
             //Motor goes forward as joystick is pushed forward in a tank drive situation
-            motorLeft.setPower(-gamepad1.left_stick_y);
-            motorRight.setPower(-gamepad1.right_stick_y);
+            //motorLeft.setPower(-gamepad1.left_stick_y);
+            //motorRight.setPower(-gamepad1.right_stick_y);
+            // Motor goes forward with joystick and turns with same joystick
+            driveMotorPower = -gamepad1.right_stick_y;
+            turningPower = gamepad1.right_stick_x;
+            motorLeft.setPower((driveMotorPower+turningPower)/2);
+            motorRight.setPower((driveMotorPower-turningPower)/2);
 
             //Button for extended position
             if(gamepad1.a){
