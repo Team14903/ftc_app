@@ -73,7 +73,6 @@ public class AutonomousProgram extends LinearOpMode {
         // Initialize Servos
         armServo = hardwareMap.servo.get("armServo");
         armServo.setPosition(0);
-        //Hi Josh
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         while (opModeIsActive()) {
