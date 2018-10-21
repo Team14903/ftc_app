@@ -49,7 +49,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Basic: Linear OpMode", group="Linear Opmode")
+@Autonomous(name="Autonomous OpMode", group="Linear Opmode")
 //@Disabled
 public class AutonomousProgram extends LinearOpMode {
 
@@ -77,9 +77,11 @@ public class AutonomousProgram extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         while (opModeIsActive()) {
-            DriveFwdDistance(100, 1440,2);
-            Thread.sleep(5000,0);
-            DriveFwdDistance(100,1440,2);
+            if (int t, t=0, t++) {
+                DriveFwdDistance(100, 250, 5);
+                Thread.sleep(5000, 0);
+                DriveFwdDistance(100, 250, 5);
+            }
         }
     }
     // This is a method to make code easier to read, see above
@@ -90,12 +92,12 @@ public class AutonomousProgram extends LinearOpMode {
         int motorPosition = (motorLeft.getCurrentPosition()+ motorRight.getCurrentPosition())/2;
 
         //Use previous motor distance in calculation
-        distance=distance+motorPosition;
+        int distanceModified=distance+motorPosition;
 
         //Run while motor distance is less than target
-        while (distance>motorPosition) {
+        while (distanceModified>motorPosition) {
             //if statement cause robot to go half speed when 90% close to target or if slowDown is false
-            if (distance < motorPosition * 0.9) {
+            if (distance < (distanceModified-motorPosition) * 0.5) {
                 motorLeft.setPower(Power);
                 motorRight.setPower(Power);
             } else{
@@ -103,7 +105,12 @@ public class AutonomousProgram extends LinearOpMode {
                 motorLeft.setPower(Power / slowDownPower);
             }
             motorPosition = (motorLeft.getCurrentPosition()+ motorRight.getCurrentPosition())/2;
+            telemetry.addData("motorPosition",motorPosition);
+            telemetry.addData("Distance",distance);
+            telemetry.update();
         }
+        motorLeft.setPower(0);
+        motorRight.setPower(0);
     }
     public void DriveFwdAccDcc(int powerInitial, int powerFinal,int distance) throws InterruptedException {
         // Get current motor position
@@ -122,6 +129,8 @@ public class AutonomousProgram extends LinearOpMode {
             motorRight.setPower(powerCurrent);
             motorPosition = (motorLeft.getCurrentPosition()+ motorRight.getCurrentPosition())/2;
         }
+        motorRight.setPower(0);
+        motorLeft.setPower(0);
     }
 
 }
