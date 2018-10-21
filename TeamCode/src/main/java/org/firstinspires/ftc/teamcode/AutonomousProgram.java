@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
@@ -55,7 +56,6 @@ public class AutonomousProgram extends LinearOpMode {
     //Declare Motor
     private DcMotor motorRight = null;
     private DcMotor motorLeft = null;
-
     //Declare Servo
     Servo armServo = null;
 
@@ -64,7 +64,9 @@ public class AutonomousProgram extends LinearOpMode {
 
         // Initialize motors
         motorLeft = hardwareMap.dcMotor.get("motorLeft");
+        motorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRight = hardwareMap.dcMotor.get("motorRight");
+        motorRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         motorLeft.setDirection(DcMotor.Direction.REVERSE);
 
@@ -75,14 +77,51 @@ public class AutonomousProgram extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         while (opModeIsActive()) {
-            DriveForwardForTime(drivePower, 1000);
+            DriveFwdDistance(100, 1440,2);
+            Thread.sleep(5000,0);
+            DriveFwdDistance(100,1440,2);
         }
     }
-    int drivePower = 1;
     // This is a method to make code easier to read, see above
-    public void DriveForwardForTime(double power, long time) throws InterruptedException {
-        motorLeft.setPower(power);
-        motorRight.setPower(power);
-        Thread.sleep(time);
+    public void DriveFwdDistance(int Power,int distance,int slowDownPower) throws InterruptedException {
+        // Get current motor position
+        // (Core Hex Motor=1.25 Degrees/Count)
+        // (HD Hex Motor=.32 Degrees/Count)
+        int motorPosition = (motorLeft.getCurrentPosition()+ motorRight.getCurrentPosition())/2;
+
+        //Use previous motor distance in calculation
+        distance=distance+motorPosition;
+
+        //Run while motor distance is less than target
+        while (distance>motorPosition) {
+            //if statement cause robot to go half speed when 90% close to target or if slowDown is false
+            if (distance < motorPosition * 0.9) {
+                motorLeft.setPower(Power);
+                motorRight.setPower(Power);
+            } else{
+                motorRight.setPower(Power / slowDownPower);
+                motorLeft.setPower(Power / slowDownPower);
+            }
+            motorPosition = (motorLeft.getCurrentPosition()+ motorRight.getCurrentPosition())/2;
+        }
     }
+    public void DriveFwdAccDcc(int powerInitial, int powerFinal,int distance) throws InterruptedException {
+        // Get current motor position
+        // (Core Hex Motor=1.25 Degrees/Count)
+        // (HD Hex Motor=.32 Degrees/Count)
+        int motorPosition = (motorLeft.getCurrentPosition()+ motorRight.getCurrentPosition())/2;
+        int powerCurrent;
+        //Use previous motor distance in calculation
+        int distanceModified=distance+motorPosition;
+
+        //Run while motor distance is less than target
+        while (distanceModified>motorPosition) {
+            //Set powerCurrent to the (changeInPower/distance)(motorDistanceTraveled)
+            powerCurrent = ((powerFinal-powerInitial)/distance)*(distanceModified-motorPosition);
+            motorLeft.setPower(powerCurrent);
+            motorRight.setPower(powerCurrent);
+            motorPosition = (motorLeft.getCurrentPosition()+ motorRight.getCurrentPosition())/2;
+        }
+    }
+
 }
