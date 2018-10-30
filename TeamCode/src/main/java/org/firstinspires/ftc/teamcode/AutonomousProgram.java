@@ -29,11 +29,16 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
 
 /**
@@ -58,10 +63,11 @@ public class AutonomousProgram extends LinearOpMode {
     private DcMotor motorLeft = null;
     //Declare Servo
     Servo armServo = null;
-
+    //Define Gyro
+    BNO055IMU imu;
     @Override
     public void runOpMode() throws InterruptedException {
-
+        int timesOpModeRun = 12;
         // Initialize motors
         motorLeft = hardwareMap.dcMotor.get("motorLeft");
         motorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -73,13 +79,27 @@ public class AutonomousProgram extends LinearOpMode {
         // Initialize Servos
         armServo = hardwareMap.servo.get("armServo");
         armServo.setPosition(0);
+
+        // Initialize Gyro
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit       = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit       = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.loggingEnabled  =false;
+        parameters.mode            =BNO055IMU.SensorMode.IMU;
+        parameters.loggingTag      ="IMU";
+        imu                        =hardwareMap.get(BNO055IMU.class, "imu name");
+        imu.initialize(parameters);
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         while (opModeIsActive()) {
-            if (int t, t=0, t++) {
-                DriveFwdDistance(100, 250, 5);
+            if (timesOpModeRun>0) {
+                DriveFwdAccDcc(0,100,250);
+                DriveFwdDistance(100, 250, 0);
+                DriveFwdAccDcc(100,0,250);
                 Thread.sleep(5000, 0);
-                DriveFwdDistance(100, 250, 5);
+                TurnGyro(90,5,50,20);
+
+                timesOpModeRun-=1;
             }
         }
     }
@@ -95,8 +115,8 @@ public class AutonomousProgram extends LinearOpMode {
 
         //Run while motor distance is less than target
         while (distanceModified>motorPosition) {
-            //if statement cause robot to go half speed when 90% close to target or if slowDown is false
-            if (distance < (distanceModified-motorPosition) * 0.5) {
+            //if statement cause robot to go half speed when 90% close to target or if slowDown is 0
+            if (distance < (distanceModified-motorPosition) * 0.5 || slowDownPower==0) {
                 motorLeft.setPower(Power);
                 motorRight.setPower(Power);
             } else{
@@ -131,5 +151,37 @@ public class AutonomousProgram extends LinearOpMode {
         motorRight.setPower(0);
         motorLeft.setPower(0);
     }
+    public void TurnGyro (float degrees, float precision, int regurlarPower, int overshootPower){
+        //Adding previous value of the gyro to the target to find end position
+        float gyroReading =imu.getAngularOrientation(AxesReference.INTRINSIC,AxesOrder.XYZ, AngleUnit.DEGREES).firstAngle;
+        float totalDegees = degrees + gyroReading;
+
+        //Set motors in opposite directions according to (+ or -)degrees
+        double left = 1;
+        double right= 1;
+        //If degrees is negative = clockwise
+        if(degrees<0){
+            left =  1;
+            right= -1;
+        }else if(degrees>0){
+            left = -1;
+            right=  1;
+        }
+        //While the gyro is not greater or less than the target ...
+        while(!(gyroReading<totalDegees+precision)&&!(gyroReading>totalDegees-precision)){
+            //If less than minimum,
+            if (!(gyroReading>totalDegees-precision)){
+                motorLeft.setPower(left*regurlarPower);
+                motorRight.setPower(right*regurlarPower);
+            } else if (!(gyroReading<totalDegees+precision)){
+                motorLeft.setPower(left*overshootPower);
+                motorRight.setPower(right*overshootPower);
+            }
+            gyroReading =imu.getAngularOrientation(AxesReference.INTRINSIC,AxesOrder.XYZ, AngleUnit.DEGREES).firstAngle;
+        }
+        motorRight.setPower(0);
+        motorLeft.setPower(0);
+    }
+
 
 }
