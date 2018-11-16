@@ -4,11 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @TeleOp(name= "TeleOp Basic Program")
-public class BasicTeleOpProgram extends LinearOpMode {
+public class RoverRuckusTeleOp extends LinearOpMode {
 
     //Declare motors
     private DcMotor motorLeft;
@@ -19,8 +20,8 @@ public class BasicTeleOpProgram extends LinearOpMode {
     private Servo armServo;
 
     //Declare Sensors
-    TouchSensor latchingTouchSensorDown;//Sensor to to test if motor has reached lower limit
-    TouchSensor latchingTouchSensorUp; //Sensor to test if motor has reached upper limit
+    DigitalChannel latchingTouchSensorDown;//Sensor to to test if motor has reached lower limit
+    DigitalChannel latchingTouchSensorUp; //Sensor to test if motor has reached upper limit
 
 
     //Value positions for servos
@@ -36,8 +37,11 @@ public class BasicTeleOpProgram extends LinearOpMode {
     public void runOpMode() throws InterruptedException{
 
         //Configure Sensors
-        latchingTouchSensorDown = hardwareMap.touchSensor.get("latchingTouchSensorDown");
-        latchingTouchSensorUp = hardwareMap.touchSensor.get("latchingTouchSensorUp");
+        latchingTouchSensorDown = hardwareMap.get(DigitalChannel.class, "latchingTouchSensorDown");
+        latchingTouchSensorUp = hardwareMap.get(DigitalChannel.class, "latchingTouchSensorUp");
+        latchingTouchSensorUp.setMode(DigitalChannel.Mode.INPUT);
+        latchingTouchSensorDown.setMode(DigitalChannel.Mode.INPUT);
+
 
         //Configure motors to Expansion Hub
         motorLeft = hardwareMap.dcMotor.get("motorLeft");
@@ -56,7 +60,7 @@ public class BasicTeleOpProgram extends LinearOpMode {
         //To set position of linear slide to down
         //While the bottom touch sensor is not pressed and x on gamepad1 is pressed ...
         //set the latching motor to 1/5 of normal power
-        while(!latchingTouchSensorDown.isPressed()&& gamepad1.x){
+        while(latchingTouchSensorDown.getState()&& gamepad1.x){
             motorLatching.setPower(-linearSlidePower);
         }
 
@@ -76,18 +80,21 @@ public class BasicTeleOpProgram extends LinearOpMode {
             motorRight.setPower((-driveMotorPower-turningPower)/2);
 
             //Button for extended position
-            //If a button is pressed and upper limit isn't reached then ...
+            //If a button isn't pressed and upper limit isn't reached then ...
             //Set motor to linear slide power
-            if(gamepad1.a && !latchingTouchSensorUp.isPressed()){
+            if(gamepad1.a && latchingTouchSensorUp.getState()){
                 motorLatching.setPower(linearSlidePower);
             }
             //Button for retracted position
-            //If a button is pressed and lower limit isn't reached then ...
+            //If a button isn't pressed and lower limit isn't reached then ...
             //Set motor to negative linear slide power
-            if(gamepad1.b && !latchingTouchSensorDown.isPressed()){
+            if(gamepad1.b && latchingTouchSensorDown.getState()){
                 motorLatching.setPower(-linearSlidePower);
             }
-            
+            if((latchingTouchSensorDown.getState() || latchingTouchSensorUp.getState())||(!gamepad1.a&&!gamepad1.b)){
+                motorLatching.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                motorLatching.setPower(0);
+            }
             idle();
         }
     }
