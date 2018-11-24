@@ -82,7 +82,7 @@ import java.util.List;
  */
 
 @Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
-//@Disabled
+@Disabled
 public class VuforiaRoverRuckusPictures extends LinearOpMode {
 
     public static final String TAG = "Vuforia Navigation Sample";
@@ -148,7 +148,7 @@ public class VuforiaRoverRuckusPictures extends LinearOpMode {
         bluePerimeter.setName("BluePerimeter");  // Blue Image
 
         VuforiaTrackable frontPerimeter  = stonesAndChips.get(2);
-        frontPerimeter.setName("frontPerimeter");  // Chips
+        frontPerimeter.setName("FrontPerimeter");  // Chips
 
         VuforiaTrackable backPerimeter  = stonesAndChips.get(3);
         backPerimeter.setName("BackPerimeter");  // Chips
