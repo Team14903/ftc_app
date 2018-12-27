@@ -21,6 +21,8 @@ public class RoverRuckusTeleOp extends LinearOpMode {
     private DcMotor motorLeft;
     private DcMotor motorRight;
     private DcMotor motorLatching;
+    private DcMotor motorArmRotate;
+    private DcMotor motorArmExtend;
 
     //Declare Servos
     private Servo armServo;
@@ -52,15 +54,19 @@ public class RoverRuckusTeleOp extends LinearOpMode {
 
 
         //Configure motors to Expansion Hub
-        motorLeft = hardwareMap.dcMotor.get("motorLeft");
-        motorRight = hardwareMap.dcMotor.get("motorRight");
-        motorLatching = hardwareMap.dcMotor.get("motorLatching");
+        motorLeft = hardwareMap.dcMotor.get("motorLeft");//drive motor left
+        motorRight = hardwareMap.dcMotor.get("motorRight");//drive motor right
+        motorLatching = hardwareMap.dcMotor.get("motorLatching");//motor to latch and pull robot up
+        motorArmRotate = hardwareMap.dcMotor.get("motorArmRotate");//motor to rotate the arm for game objects
+        motorArmExtend = hardwareMap.dcMotor.get("motorArmExtend");//motor to extend the arm for game objects
 
         //Set drive motors to opposite directions(is reversable if needed) and set latching motor to forward
         //Update 10.1.18: Setting right motor direction to reverse to enable 1 joystick driving
         motorLeft.setDirection(DcMotor.Direction.FORWARD);
         motorRight.setDirection(DcMotor.Direction.REVERSE);
         motorLatching.setDirection(DcMotor.Direction.FORWARD);
+        motorArmRotate.setDirection(DcMotor.Direction.FORWARD);
+        motorArmExtend.setDirection(DcMotor.Direction.FORWARD);
 
         //Configure Servos
         armServo = hardwareMap.servo.get("motorArm");
@@ -77,12 +83,12 @@ public class RoverRuckusTeleOp extends LinearOpMode {
         boolean oldUpDPadValue = false;
         boolean oldDownDPadValue = false;
 
-        while(!gamepad1.dpad_right||!gamepad1.dpad_left){
+        while(!gamepad1.dpad_right){
             boolean newUpDPadValue = gamepad1.dpad_up;
             boolean newDownDPadValue = gamepad1.dpad_down;
-            if(newUpDPadValue&&!oldUpDPadValue){
+            if(newUpDPadValue&&!oldUpDPadValue&&!(gameMode==3)){
                 gameMode = gameMode+1;
-            }else if(newDownDPadValue&&!oldDownDPadValue){
+            }else if(newDownDPadValue&&!oldDownDPadValue&&!(gameMode==0)){
                 gameMode = gameMode-1;
             }
             oldDownDPadValue=newDownDPadValue;
@@ -102,8 +108,8 @@ public class RoverRuckusTeleOp extends LinearOpMode {
 
                 driveMotorPower = -gamepad1.right_stick_y;
                 turningPower = gamepad1.right_stick_x;
-                motorLeft.setPower(Range.clip((driveMotorPower + turningPower),-1,1));
-                motorRight.setPower(Range.clip((-driveMotorPower - turningPower),-1,1));
+                motorLeft.setPower(Range.clip((driveMotorPower - turningPower),-1,1));
+                motorRight.setPower(Range.clip((driveMotorPower + turningPower),-1,1));
 
             }else if(gameMode == 1) {
                 // Arcade style with 2 joysticks(simple s(simple y is power,x is the differential of
@@ -111,9 +117,9 @@ public class RoverRuckusTeleOp extends LinearOpMode {
                 // Motor goes forward with joystick and turns with different joysticks
                 driveMotorPower = -gamepad1.left_stick_y;
                 turningPower = gamepad1.right_stick_x;
-                motorLeft.setPower(Range.clip((driveMotorPower + turningPower),-1,1));
-                motorRight.setPower(Range.clip((-driveMotorPower - turningPower),-1,1));
-            }else if(gameMode == 2) {
+                motorLeft.setPower(Range.clip((driveMotorPower - turningPower),-1,1));
+                motorRight.setPower(Range.clip((driveMotorPower + turningPower),-1,1));
+            }/*else if(gameMode == 2) { //Cheesey drive system isn't working and not top priority for rover ruckus
                 //Cheesy driving controls, has left y joystick as power
                 //x and y coordinates are the current values of the right joystick
                 driveMotorPower = -gamepad1.left_stick_y;
@@ -145,10 +151,10 @@ public class RoverRuckusTeleOp extends LinearOpMode {
                     turningPower=-turningPower;
                 }
                 motorLeft.setPower(Range.clip((driveMotorPower + turningPower),-1,1));
-                motorRight.setPower(Range.clip((-driveMotorPower - turningPower),-1,1));
+                motorRight.setPower(Range.clip((driveMotorPower - turningPower),-1,1));
 
 
-            }else if(gameMode == 3){
+            }*/else if(gameMode == 3){
                 //y value is set to negative in the stick control to make up mean positive
                 //Motor goes forward as joystick is pushed forward in a tank drive situation
                 motorLeft.setPower(gamepad1.left_stick_y);
@@ -176,6 +182,12 @@ public class RoverRuckusTeleOp extends LinearOpMode {
                 armServo.setPosition(0);
             } else if(gamepad1.right_bumper){
                 armServo.setPosition(1);
+            }
+            //controller for arm
+            if(!(gamepad2.left_stick_y<0.05&&gamepad2.left_stick_y>-0.05)){
+                motorArmRotate.setPower(Range.clip(gamepad2.left_stick_y,-1,1));
+            }else {
+                motorArmRotate.setPower(0);
             }
             idle();
         }
